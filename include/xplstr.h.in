@@ -1,0 +1,149 @@
+#ifndef XPLSTR_H
+#define XPLSTR_H
+
+/*
+	Platform defines
+
+	The use of these should be limited as much as possible.  Specific tests for
+	features of the platform are prefered.
+*/
+#ifndef LINUX
+#cmakedefine LINUX					1
+#endif
+
+#ifndef WIN32
+#cmakedefine WIN32					1
+#endif
+#ifndef WINDOWS
+#cmakedefine WINDOWS				1
+
+#endif
+
+
+#ifndef MACOSX
+#cmakedefine MACOSX					1
+#endif
+#ifndef DARWIN
+#cmakedefine DARWIN					1
+#endif
+#ifndef APPLE
+#cmakedefine APPLE					1
+#endif
+
+
+#cmakedefine DEBUG					1
+
+#define HAVE_STRTOULL				1
+#define HAVE_STRCASECMP				1
+#define HAVE_STRNCASECMP			1
+#define HAVE_VSNPRINTF				1
+
+
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stddef.h>
+#include <newxpl.h>
+#include <xpltypes.h>
+#include <errno.h>
+
+#ifndef  HAVE_STRTOULL
+#ifdef	HAVE__STRTOUI64
+#define  strtoull _strtoui64
+#else
+#error "strtoull and _strtoui64 are not implemented on this platform"
+#endif
+#endif
+
+
+#ifdef HAVE_STRCASECMP
+# define XplStrCaseCmp(a,b) strcasecmp(a,b)
+# define stricmp(a,b) strcasecmp(a,b)
+#elif defined(HAVE_STRICMP)
+# define XplStrCaseCmp(a,b) stricmp(a,b)
+# define strcasecmp(a,b) stricmp(a,b)
+#else
+# error "XplStrCaseCmp is not implemented on this platform"
+#endif
+
+#ifdef HAVE_STRNCASECMP
+# define XplStrNCaseCmp(a,b,c) strncasecmp(a,b,c)
+# define strnicmp(a,b,c) strncasecmp(a,b,c)
+#elif defined(HAVE_STRNICMP)
+# define XplStrNCaseCmp(a,b,c) strnicmp(a,b,c)
+# define strncasecmp(a,b,c) strnicmp(a,b,c)
+#else
+# error "XplStrNCaseCmp is not implemented on this platform"
+#endif
+
+#ifdef HAVE_VSNPRINTF
+# define XplVsnprintf vsnprintf
+#elif defined (HAVE__VSNPRINTF)
+# define XplVsnprintf _vsnprintf
+#endif
+
+
+/*
+	strxcmp and strxicmp behave exactly like strncmp and strnicmp, except that
+	the length is automatically determined by the length of the second argument.
+
+	If the second argument is NULL then -1 is returned.
+*/
+#define strxcmp(s1, s2)		(s2 ? strncmp (s1, s2, strlen(s2)) : -1)
+#define strxicmp(s1, s2)	(s2 ? strnicmp(s1, s2, strlen(s2)) : -1)
+
+/*
+	str safe cmp
+
+	strscmp and strsicmp behave exactly like strcmp and stricmp, except that the
+	arguments may be NULL. A NULL string is considered a match to another NULL
+	string.
+*/
+#define strscmp(s1, s2)		((!s1 || !s2) ?									\
+								((!s1 && !s2) ? 0 : -1) :					\
+								strcmp(s1, s2))
+
+#define strsicmp(s1, s2)	((!s1 || !s2) ?									\
+								((!s1 && !s2) ? 0 : -1) :					\
+								stricmp(s1, s2))
+
+EXPORT size_t vstrcatf( char *buffer, size_t bufferSize, size_t *sizeNeeded, const char *format, va_list args );
+EXPORT size_t vstrprintf( char *buffer, size_t bufferSize, size_t *sizeNeeded, const char *format, va_list args );
+EXPORT size_t strprintf( char *buffer, size_t bufferSize, size_t *sizeNeeded, const char *format, ... ) XplFormatString(4, 5);
+EXPORT size_t strcatf( char *buffer, size_t bufferSize, size_t *sizeNeeded, const char *format, ... ) XplFormatString(4, 5);
+EXPORT time_t strtotime( char *str, char **end, int radix );
+EXPORT uint64 strtobytes( char *str, char **end, int radix );
+EXPORT char *strchrs( char *str, char *chr );
+EXPORT char *strrchrs( char *str, char *chr );
+
+EXPORT char *_strtok_r_( char *s1, const char *s2, char **s3 );
+#ifndef strtok_r
+#define strtok_r _strtok_r_
+#endif
+
+#if !defined (_MSC_VER)
+EXPORT char *strlwr( char *s );
+EXPORT char *strupr( char *s );
+#endif
+#define strlower( s )	strlwr( (s) )
+#define strupper( s )	strupr( (s) )
+#define XplStrLower(s) strlwr((s))
+
+EXPORT char * strstrn(const char *haystack, const char *needle, size_t len);
+EXPORT char * strnistr(const char *haystack, const char *needle, size_t len);
+EXPORT char * strichr(const char *haystack, const char needle);
+EXPORT char * stristrn(const char *haystack, const char *needle, size_t len);
+#define stristr(h, n) stristrn((h), (n), strlen((n)))
+EXPORT int strpat(const char *str, const char *pattern);
+EXPORT int strpatn(const char *str, const char *pattern, size_t len);
+EXPORT int stripat(char *str, char *pattern);
+EXPORT int stripatn(char *str, char *pattern, size_t len);
+EXPORT char *strspace( char *source );
+EXPORT char *strrspace( char *source );
+EXPORT char *_skipspace( char *source, const char *breakchars );
+#define skipspace(s) _skipspace((s), "\r\n")
+EXPORT char *chopspace( char *value );
+EXPORT char *removespace( char *source, char *dest, int destsize );
+
+#endif XPLSTR_H
